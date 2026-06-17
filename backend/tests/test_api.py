@@ -25,6 +25,8 @@ async def setup_db():
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
+    await test_engine.dispose()
+
 def _mock_token(sub="user-123", groups=None):
     return {
         "sub": sub,
