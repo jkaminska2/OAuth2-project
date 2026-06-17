@@ -86,7 +86,7 @@ cd backend
 pip install -r requirements.txt
 DATABASE_URL="postgresql+asyncpg://postgres:secret@localhost:5432/appdb" \
 AUTHENTIK_ISSUER="http://localhost:9000/application/o/taskmanager/" \
-AUTHENTIK_JWKS_URL="http://authentik-server:9000/application/o/taskmanager/jwks/" \
+AUTHENTIK_JWKS_URL="http://localhost:9000/application/o/taskmanager/jwks/" \
 alembic upgrade head
 uvicorn app.main:app --reload
 
