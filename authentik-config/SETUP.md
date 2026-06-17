@@ -1,4 +1,4 @@
-# Konfiguracja Authentik – krok po kroku
+# Konfiguracja Authentik
 
 Po uruchomieniu `docker compose up -d` Authentik będzie dostępny pod:
 - http://localhost:9000  (HTTP)
@@ -11,16 +11,16 @@ Ustaw hasło dla konta `akadmin`.
 
 ## 2. Utwórz aplikację OAuth2
 
-Zaloguj się do Admin UI → http://localhost:9000/if/admin/
+Zaloguj się do Admin UI: http://localhost:9000/if/admin/
 
 ### 2a. Utwórz Provider
 
-Nawiguj: **Applications → Providers → Create**
+Nawiguj: **Applications -> Providers -> Create**
 - Type: **OAuth2/OpenID Provider**
 - Name: `taskmanager-provider`
 - Authentication flow: `default-authentication-flow`
 - Authorization flow: `default-provider-authorization-implicit-consent`
-- Client type: **Public** (brak client_secret – wymagane dla PKCE)
+- Client type: Public (brak client_secret - wymagane dla PKCE)
 - Client ID: `taskmanager-client`
 - Redirect URIs:
   ```
@@ -30,25 +30,23 @@ Nawiguj: **Applications → Providers → Create**
 - Signing Key: wybierz domyślny klucz RS256
 - **Scopes**: openid, email, profile
 - **Subject mode**: Based on the User's hashed ID
-
-> ⚠️ Upewnij się że Client Type = **Public** – to wyłącza client_secret
-> i wymusza PKCE dla bezpieczeństwa.
+- **Client Type**: Public
 
 ### 2b. Utwórz Application
 
-**Applications → Applications → Create**
+**Applications -> Applications -> Create**
 - Name: `Task Manager`
-- Slug: `taskmanager`  ← musi się zgadzać z URL-ami w kodzie
+- Slug: `taskmanager`  <- musi się zgadzać z URL-ami w kodzie
 - Provider: `taskmanager-provider`
 
 ### 2c. Utwórz grupę admin
 
-**Directory → Groups → Create**
+**Directory -> Groups -> Create**
 - Name: `admin`
 
 ### 2d. Dodaj property mapping dla grup
 
-**Customization → Property Mappings → Create**
+**Customization -> Property Mappings -> Create**
 - Type: Scope Mapping
 - Name: `groups-scope`
 - Scope name: `groups`
@@ -57,13 +55,13 @@ Nawiguj: **Applications → Providers → Create**
 return list(request.user.ak_groups.values_list("name", flat=True))
 ```
 
-Wróć do Providera i dodaj `groups-scope` do **Selected scopes**.
+Wróć do Providera i dodaj `groups-scope` do Selected scopes.
 
 ### 2e. Utwórz użytkowników
 
-**Directory → Users → Create**
+**Directory -> Users -> Create**
 - Normalny: username=`user1`, email=`user1@example.com`
-- Admin: username=`admin1`, email=`admin1@example.com` → przypisz do grupy `admin`
+- Admin: username=`admin1`, email=`admin1@example.com` -> przypisz do grupy `admin`
 
 ## 3. Sprawdź JWKS
 

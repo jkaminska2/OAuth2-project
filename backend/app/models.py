@@ -5,12 +5,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-
 class TaskStatus(str, enum.Enum):
     todo = "todo"
     in_progress = "in_progress"
     done = "done"
-
 
 class Task(Base):
     __tablename__ = "tasks"

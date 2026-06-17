@@ -1,4 +1,4 @@
-name: CI/CD – OAuth2 TaskManager
+name: CI/CD - OAuth2 TaskManager
 
 on:
   push:
@@ -7,9 +7,6 @@ on:
     branches: [main]
 
 jobs:
-  # ─────────────────────────────────────────────
-  # Backend tests
-  # ─────────────────────────────────────────────
   backend-tests:
     name: Backend tests (pytest)
     runs-on: ubuntu-latest
@@ -56,9 +53,6 @@ jobs:
           files: backend/coverage.xml
           fail_ci_if_error: false
 
-  # ─────────────────────────────────────────────
-  # Frontend build check
-  # ─────────────────────────────────────────────
   frontend-build:
     name: Frontend build
     runs-on: ubuntu-latest
@@ -84,9 +78,6 @@ jobs:
           npm ci
           npm run build
 
-  # ─────────────────────────────────────────────
-  # Docker image build
-  # ─────────────────────────────────────────────
   docker-build:
     name: Docker build
     runs-on: ubuntu-latest

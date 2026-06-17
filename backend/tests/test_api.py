@@ -1,11 +1,3 @@
-"""
-Automated tests for the TaskManager API.
-
-Strategy:
-- We mock `_decode_token` to bypass real Authentik JWT validation.
-- We use SQLite in-memory for the DB to avoid needing a real Postgres.
-"""
-
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
@@ -15,19 +7,15 @@ from unittest.mock import AsyncMock, patch
 from app.main import app
 from app.database import Base, get_db
 
-# ── In-memory test DB ──────────────────────────────────────────────────────────
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
 TestSession = async_sessionmaker(test_engine, expire_on_commit=False)
-
 
 async def override_get_db():
     async with TestSession() as session:
         yield session
 
-
 app.dependency_overrides[get_db] = override_get_db
-
 
 @pytest_asyncio.fixture(autouse=True)
 async def setup_db():
@@ -36,9 +24,6 @@ async def setup_db():
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _mock_token(sub="user-123", groups=None):
     return {
@@ -49,7 +34,6 @@ def _mock_token(sub="user-123", groups=None):
         "preferred_username": sub,
     }
 
-
 @pytest_asyncio.fixture
 async def client():
     async with AsyncClient(
@@ -57,23 +41,18 @@ async def client():
     ) as c:
         yield c
 
-
-# ── Tests ──────────────────────────────────────────────────────────────────────
-
 class TestHealth:
     @pytest.mark.asyncio
     async def test_health_is_public(self, client):
-        """GET /health should work without any token."""
         resp = await client.get("/health")
         assert resp.status_code == 200
         assert resp.json()["status"] == "ok"
-
 
 class TestTasks:
     @pytest.mark.asyncio
     async def test_list_tasks_requires_auth(self, client):
         resp = await client.get("/tasks/")
-        assert resp.status_code == 403  # no bearer → 403
+        assert resp.status_code == 403
 
     @pytest.mark.asyncio
     async def test_create_and_list_task(self, client):
@@ -81,7 +60,6 @@ class TestTasks:
             "app.middleware.auth._decode_token",
             new=AsyncMock(return_value=_mock_token()),
         ):
-            # Create
             resp = await client.post(
                 "/tasks/",
                 json={"title": "Buy groceries", "description": "Milk, eggs"},
@@ -90,7 +68,6 @@ class TestTasks:
             assert resp.status_code == 201
             task_id = resp.json()["id"]
 
-            # List
             resp = await client.get(
                 "/tasks/", headers={"Authorization": "Bearer fake-token"}
             )
@@ -167,7 +144,7 @@ class TestAdmin:
     async def test_admin_stats_requires_admin_role(self, client):
         with patch(
             "app.middleware.auth._decode_token",
-            new=AsyncMock(return_value=_mock_token(groups=[])),  # no admin group
+            new=AsyncMock(return_value=_mock_token(groups=[])),
         ):
             resp = await client.get(
                 "/admin/stats", headers={"Authorization": "Bearer fake-token"}

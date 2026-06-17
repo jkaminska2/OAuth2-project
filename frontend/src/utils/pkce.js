@@ -1,36 +1,24 @@
-/**
- * OAuth 2.0 Authorization Code Flow with PKCE
- *
- * Jak działa PKCE (Proof Key for Code Exchange)?
- * ────────────────────────────────────────────────
- * Problem: w publicznych klientach (SPA, mobile) nie można bezpiecznie
- * przechować client_secret, więc złośliwa aplikacja mogłaby przechwycić
- * authorization code i wymienić go na token.
- *
- * Rozwiązanie PKCE (RFC 7636):
- *  1. Klient generuje losowy `code_verifier` (43-128 znaków, base64url).
- *  2. Oblicza `code_challenge = BASE64URL(SHA-256(code_verifier))`.
- *  3. Wysyła `code_challenge` wraz z żądaniem autoryzacji (widoczne publicznie).
- *  4. Po powrocie z auth servera wysyła `code_verifier` przy wymianie kodu.
- *  5. Auth server weryfikuje: SHA-256(verifier) === challenge → token wydany.
- *
- * Nawet jeśli atakujący przechwyci `code`, nie zna `code_verifier`,
- * więc nie może wymienić kodu na token.
- */
+// PKCE (RFC 7636):
+// 1. Klient generuje losowy `code_verifier` (43-128 znaków, base64url).
+// 2. Oblicza `code_challenge = BASE64URL(SHA-256(code_verifier))`.
+// 3. Wysyła `code_challenge` wraz z żądaniem autoryzacji (widoczne publicznie).
+// 4. Po powrocie z auth servera wysyła `code_verifier` przy wymianie kodu.
+// 5. Auth server weryfikuje: SHA-256(verifier) === challenge -> token wydany.
+
+// Nawet jeśli atakujący przechwyci `code`, nie zna `code_verifier`,
+// więc nie może wymienić kodu na token.
 
 const AUTHENTIK_URL = import.meta.env.VITE_AUTHENTIK_URL;
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
 const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI;
-const APP_NAME = "taskmanager"; // Authentik application slug
+const APP_NAME = "taskmanager";
 
 export const AUTH_ENDPOINTS = {
-  authorize: `${AUTHENTIK_URL}/application/o/${APP_NAME}/authorize/`,
-  token: `${AUTHENTIK_URL}/application/o/${APP_NAME}/token/`,
-  userinfo: `${AUTHENTIK_URL}/application/o/${APP_NAME}/userinfo/`,
-  logout: `${AUTHENTIK_URL}/application/o/${APP_NAME}/end-session/`,
+  authorize: `${AUTHENTIK_URL}/application/o/authorize/`,
+  token: `${AUTHENTIK_URL}/application/o/token/`,
+  userinfo: `${AUTHENTIK_URL}/application/o/userinfo/`,
+  logout: `${AUTHENTIK_URL}/application/o/taskmanager/end-session/`,
 };
-
-// ── Crypto helpers ─────────────────────────────────────────────────────────────
 
 function base64urlEncode(buffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)))
@@ -58,8 +46,6 @@ function generateState() {
   return base64urlEncode(array);
 }
 
-// ── PKCE Login ─────────────────────────────────────────────────────────────────
-
 export async function startPKCELogin() {
   const verifier = await generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
@@ -81,14 +67,12 @@ export async function startPKCELogin() {
   window.location.href = `${AUTH_ENDPOINTS.authorize}?${params}`;
 }
 
-// ── Token exchange ─────────────────────────────────────────────────────────────
-
 export async function exchangeCodeForToken(code, returnedState) {
   const verifier = sessionStorage.getItem("pkce_verifier");
   const savedState = sessionStorage.getItem("pkce_state");
 
   if (returnedState !== savedState) {
-    throw new Error("State mismatch – potential CSRF attack");
+    throw new Error("State mismatch - potential CSRF attack");
   }
 
   sessionStorage.removeItem("pkce_verifier");
@@ -109,8 +93,6 @@ export async function exchangeCodeForToken(code, returnedState) {
   if (!resp.ok) throw new Error(`Token exchange failed: ${resp.status}`);
   return resp.json(); // { access_token, id_token, refresh_token, expires_in }
 }
-
-// ── Token storage helpers ──────────────────────────────────────────────────────
 
 export function saveTokens(tokens) {
   localStorage.setItem("access_token", tokens.access_token);

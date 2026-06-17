@@ -1,9 +1,6 @@
 version: "3.9"
 
 services:
-  # ─────────────────────────────────────────────
-  # PostgreSQL – shared DB for app + Authentik
-  # ─────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: oauth2_postgres
@@ -23,9 +20,6 @@ services:
     networks:
       - internal
 
-  # ─────────────────────────────────────────────
-  # Redis – Authentik cache/broker
-  # ─────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: oauth2_redis
@@ -40,9 +34,6 @@ services:
     networks:
       - internal
 
-  # ─────────────────────────────────────────────
-  # Authentik – Authorization Server (not Keycloak)
-  # ─────────────────────────────────────────────
   authentik-server:
     image: ghcr.io/goauthentik/server:2024.2.2
     container_name: oauth2_authentik_server
@@ -97,9 +88,6 @@ services:
     networks:
       - internal
 
-  # ─────────────────────────────────────────────
-  # FastAPI Backend
-  # ─────────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -122,9 +110,6 @@ services:
       - internal
       - external
 
-  # ─────────────────────────────────────────────
-  # React Frontend
-  # ─────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend

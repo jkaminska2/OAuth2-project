@@ -9,19 +9,14 @@ from app.models import Task
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-# require_role("admin") checks that the JWT `groups` claim contains "admin"
 _admin = require_role("admin")
-
 
 @router.get("/stats")
 async def get_stats(
     db: AsyncSession = Depends(get_db),
-    _: TokenData = Depends(_admin),                     # 🔒 protected + role
+    _: TokenData = Depends(_admin),
 ):
-    """
-    Admin-only: aggregate statistics across ALL users.
-    Requires the caller to be a member of the 'admin' group in Authentik.
-    """
+    
     total_result = await db.execute(select(func.count(Task.id)))
     total = total_result.scalar()
 
@@ -41,13 +36,11 @@ async def get_stats(
         "by_user": by_user,
     }
 
-
 @router.get("/tasks")
 async def list_all_tasks(
     db: AsyncSession = Depends(get_db),
-    _: TokenData = Depends(_admin),                     # 🔒 protected + role
+    _: TokenData = Depends(_admin),
 ):
-    """Admin-only: list every task regardless of owner."""
     result = await db.execute(select(Task).order_by(Task.id.desc()))
     tasks = result.scalars().all()
     return tasks

@@ -1,13 +1,3 @@
-"""
-OAuth 2.0 token validation middleware.
-
-Flow:
-  1. Client sends Bearer token (JWT issued by Authentik).
-  2. We fetch Authentik's JWKS (cached) and verify the token signature.
-  3. We extract `sub`, `email`, and `groups` claims.
-  4. `require_role("admin")` checks the `groups` claim.
-"""
-
 import httpx
 from functools import lru_cache
 from typing import List, Optional
@@ -21,9 +11,6 @@ from app.config import settings
 
 bearer_scheme = HTTPBearer(auto_error=True)
 
-
-# ── Token payload model ────────────────────────────────────────────────────────
-
 class TokenData(BaseModel):
     sub: str
     email: Optional[str] = None
@@ -31,11 +18,7 @@ class TokenData(BaseModel):
     groups: List[str] = []
     preferred_username: Optional[str] = None
 
-
-# ── JWKS fetching (simple in-process cache) ────────────────────────────────────
-
 _jwks_cache: dict | None = None
-
 
 async def _get_jwks() -> dict:
     global _jwks_cache
@@ -46,9 +29,6 @@ async def _get_jwks() -> dict:
             _jwks_cache = resp.json()
     return _jwks_cache
 
-
-# ── Token validation ───────────────────────────────────────────────────────────
-
 async def _decode_token(token: str) -> dict:
     jwks = await _get_jwks()
     try:
@@ -57,7 +37,7 @@ async def _decode_token(token: str) -> dict:
             jwks,
             algorithms=["RS256"],
             issuer=settings.authentik_issuer,
-            options={"verify_aud": False},  # audience varies by client config
+            options={"verify_aud": False},
         )
         return payload
     except JWTError as exc:
@@ -66,9 +46,6 @@ async def _decode_token(token: str) -> dict:
             detail=f"Invalid or expired token: {exc}",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-
-# ── FastAPI dependencies ───────────────────────────────────────────────────────
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(bearer_scheme),
@@ -84,8 +61,6 @@ async def get_current_user(
 
 
 def require_role(role: str):
-    """Dependency factory – enforces group membership extracted from JWT."""
-
     async def _check(user: TokenData = Depends(get_current_user)) -> TokenData:
         if role not in user.groups:
             raise HTTPException(

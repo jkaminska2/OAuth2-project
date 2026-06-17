@@ -21,19 +21,15 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  // Tasks
   listTasks: () => request("/tasks/"),
   createTask: (data) => request("/tasks/", { method: "POST", body: JSON.stringify(data) }),
   updateTask: (id, data) => request(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   deleteTask: (id) => request(`/tasks/${id}`, { method: "DELETE" }),
 
-  // User
   getMe: () => request("/users/me"),
 
-  // Admin
   getStats: () => request("/admin/stats"),
   getAllTasks: () => request("/admin/tasks"),
 
-  // Health (no auth)
   health: () => fetch(`${API_URL}/health`).then((r) => r.json()),
 };

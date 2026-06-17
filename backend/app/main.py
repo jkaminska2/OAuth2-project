@@ -11,7 +11,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -20,8 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Routers ───────────────────────────────────────────────────────────────────
-app.include_router(health.router)          # public
-app.include_router(tasks.router)           # protected
-app.include_router(users.router)           # protected
-app.include_router(admin.router)           # protected + role-based
+app.include_router(health.router)
+app.include_router(tasks.router)
+app.include_router(users.router)
+app.include_router(admin.router)
