@@ -46,8 +46,6 @@ jobs:
           AUTHENTIK_JWKS_URL: http://localhost:9000/application/o/taskmanager/jwks/
         run: |
           pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
-          echo "Pytest finished, forcing exit"
-          kill -9 $(pgrep -f pytest) || true
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
